@@ -62,3 +62,4 @@ public/
 .sass-cache/
 *.css.map
 temp-man-pages/
+/build

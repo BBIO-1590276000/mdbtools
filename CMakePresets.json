@@ -43,33 +43,6 @@
             "toolset": "v142"
         },
         {
-            "name": "wasm139 windows_env",
-            "hidden": true,
-            "displayName": "Emscripten 1.39.x Windows environment",
-            "description": "Sets Emscripten 1.39.x Windows environment variables",
-            "environment": {
-                "PATH": "$penv{USERPROFILE}\\dev\\emsdk139;$penv{USERPROFILE}\\dev\\emsdk139\\upstream\\emscripten;$penv{PATH}",
-                "EMSDK": "$penv{USERPROFILE}\\dev\\emsdk139",
-                "EM_CONFIG": "$penv{USERPROFILE}\\dev\\emsdk139\\.emscripten",
-                "EM_CACHE": "$penv{USERPROFILE}\\dev\\emsdk139\\upstream\\emscripten\\cache",
-                "EMSDK_NODE": "$penv{USERPROFILE}\\dev\\emsdk139\\node\\20.18.0_64bit\\bin\\node.exe",
-                "EMSDK_PYTHON": "$penv{USERPROFILE}\\dev\\emsdk139\\python\\3.9.2-nuget_64bit\\python.exe"
-            }
-        },
-        {
-            "name": "wasm-1.39.8-32bit Windows",
-            "displayName": "Configure Preset for wasm-1.39.8-32bit Windows",
-            "description": "Sets Makefile for WebAssembly (32-bit)",
-            "inherits": "wasm139 windows_env",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "$penv{USERPROFILE}/dev/emsdk139/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-            "binaryDir": "${sourceDir}/build/wasm_139_32",
-            "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Debug;MinSizeRel",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
-            }
-        },
-        {
             "name": "macx-clang-universal",
             "displayName": "Configure Preset for macx-clang universal",
             "description": "Sets makefile generator for clang",
@@ -248,32 +221,6 @@
                 "rhs": "Darwin"
             },
             "targets": [ "install" ]
-        },
-        {
-            "name": "wasm-1.39.8-32bit Windows Release",
-            "configurePreset": "wasm-1.39.8-32bit Windows",
-            "configuration": "MinSizeRel",
-            "description": "Build using the wasm-1.39.8-32bit Windows Release configure preset",
-            "inheritConfigureEnvironment": true,
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            },
-            "targets": [ "install" ]
-        },
-        {
-            "name": "wasm-1.39.8-32bit Windows Debug",
-            "configurePreset": "wasm-1.39.8-32bit Windows",
-            "configuration": "Debug",
-            "description": "Build using the wasm-1.39.8-32bit Windows Debug configure preset",
-            "inheritConfigureEnvironment": true,
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            },
-            "targets": [ "install" ]
         }
     ],
     "workflowPresets": [
@@ -376,19 +323,6 @@
                 {
                     "type": "build",
                     "name": "macx-clang-universal Debug"
-                }
-            ]
-        },
-        {
-            "name": "wasm-139-windows",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "wasm-1.39.8-32bit Windows"
-                },
-                {
-                    "type": "build",
-                    "name": "wasm-1.39.8-32bit Windows Release"
                 }
             ]
         }
