@@ -93,13 +93,13 @@ static char *mdb_find_file(const char *file_name)
 			fprintf(stderr, "Can't alloc filename\n");
 		return result;
 	}
-	
+
 	/* Now pull apart $MDBPATH and try those */
 	mdbpath = (gchar *) getenv("MDBPATH");
 	/* no path, can't find file */
 	if (!mdbpath || !strlen(mdbpath)) return NULL;
 
-	dir = g_strsplit(mdbpath, ":", 0); 
+	dir = g_strsplit(mdbpath, ":", 0);
 	while (dir[i]) {
 		if (!strlen(dir[i])) continue;
 		tmpfname = g_strconcat(dir[i++], "/", file_name, NULL);
@@ -151,7 +151,7 @@ static MdbHandle *mdb_handle_from_stream(FILE *stream, MdbFileFlags flags) {
 	}
 	if (mdb->pg_buf[0] != 0) {
 		mdb_close(mdb);
-		return NULL; 
+		return NULL;
 	}
 	mdb->f->jet_version = mdb_get_byte(mdb->pg_buf, 0x14);
 	switch(mdb->f->jet_version) {
@@ -169,7 +169,7 @@ static MdbHandle *mdb_handle_from_stream(FILE *stream, MdbFileFlags flags) {
 	default:
 		fprintf(stderr,"Unknown Jet version: %x\n", mdb->f->jet_version);
 		mdb_close(mdb);
-		return NULL; 
+		return NULL;
 	}
 
 	unsigned char tmp_key[4] = { 0xC7, 0xDA, 0x39, 0x6B };
@@ -225,7 +225,7 @@ MdbHandle *mdb_open_buffer(void *buffer, size_t len, MdbFileFlags flags) {
  * @flags: MDB_NOFLAGS for read-only, MDB_WRITABLE for read/write
  *
  * Opens an MDB file and returns an MdbHandle to it.  MDB File may be relative
- * to the current directory, a full path to the file, or relative to a 
+ * to the current directory, a full path to the file, or relative to a
  * component of $MDBPATH.
  *
  * Return value: pointer to MdbHandle structure.
@@ -237,7 +237,7 @@ MdbHandle *mdb_open(const char *filename, MdbFileFlags flags)
 	char *filepath = mdb_find_file(filename);
 	if (!filepath) {
 		fprintf(stderr, "File not found\n");
-		return NULL; 
+		return NULL;
 	}
 #ifdef _WIN32
     char *mode = (flags & MDB_WRITABLE) ? "rb+" : "rb";
@@ -263,10 +263,10 @@ MdbHandle *mdb_open(const char *filename, MdbFileFlags flags)
  * Dereferences MDB file, closes if reference count is 0, and destroys handle.
  *
  **/
-void 
+void
 mdb_close(MdbHandle *mdb)
 {
-	if (!mdb) return;	
+	if (!mdb) return;
 	mdb_free_catalog(mdb);
 	g_free(mdb->stats);
 	g_free(mdb->backend_name);
@@ -329,8 +329,8 @@ MdbHandle *mdb_clone_handle(MdbHandle *mdb)
 	return newmdb;
 }
 
-/* 
-** mdb_read a wrapper for read that bails if anything is wrong 
+/*
+** mdb_read a wrapper for read that bails if anything is wrong
 */
 ssize_t mdb_read_pg(MdbHandle *mdb, unsigned long pg)
 {
@@ -358,11 +358,11 @@ static ssize_t _mdb_read_pg(MdbHandle *mdb, void *pg_buf, unsigned long pg)
         fprintf(stderr, "Unable to seek to end of file\n");
         return 0;
     }
-    if (ftello(mdb->f->stream) < offset) { 
+    if (ftello(mdb->f->stream) < offset) {
         fprintf(stderr,"offset %" PRIu64 " is beyond EOF\n",(uint64_t)offset);
         return 0;
     }
-	if (mdb->stats && mdb->stats->collect) 
+	if (mdb->stats && mdb->stats->collect)
 		mdb->stats->pg_reads++;
 
 	if (fseeko(mdb->f->stream, offset, SEEK_SET) == -1) {
@@ -374,7 +374,7 @@ static ssize_t _mdb_read_pg(MdbHandle *mdb, void *pg_buf, unsigned long pg)
 		perror("read");
 		return 0;
 	}
-    memset(pg_buf + len, 0, mdb->fmt->pg_size - len);
+    memset((char*)pg_buf + len, 0, mdb->fmt->pg_size - len);
 	/*
 	 * unencrypt the page if necessary.
 	 * it might make sense to cache the unencrypted data blocks?
@@ -487,7 +487,7 @@ double mdb_pg_get_double(MdbHandle *mdb, int offset)
 	return mdb_get_double(mdb->pg_buf, offset);
 }
 
-int 
+int
 mdb_set_pos(MdbHandle *mdb, int pos)
 {
 	if (pos<0 || pos >= mdb->fmt->pg_size) return 0;
