@@ -38,7 +38,7 @@ mdb_get_objtype_string(int obj_type)
 	if (obj_type >= (int)(sizeof(type_name)/sizeof(type_name[0]))) {
 		return NULL;
 	} else {
-		return type_name[obj_type]; 
+		return type_name[obj_type];
 	}
 }
 
@@ -153,7 +153,7 @@ GPtrArray *mdb_read_catalog (MdbHandle *mdb, int objtype)
 		}
 	}
 	//mdb_dump_catalog(mdb, MDB_TABLE);
- 
+
 cleanup:
 	if (table)
 		mdb_free_tabledef(table);
@@ -182,7 +182,7 @@ mdb_get_catalogentry_by_name(MdbHandle *mdb, const gchar* name)
 	return NULL;
 }
 
-void 
+void
 mdb_dump_catalog(MdbHandle *mdb, int obj_type)
 {
 	unsigned int i;
@@ -193,7 +193,7 @@ mdb_dump_catalog(MdbHandle *mdb, int obj_type)
                 entry = g_ptr_array_index(mdb->catalog,i);
 		if (obj_type==MDB_ANY || entry->object_type==obj_type) {
 			printf("Type: %-12s Name: %-48s Page: %06lx\n",
-			mdb_get_objtype_string(entry->object_type) ?: "Unknown",
+			mdb_get_objtype_string(entry->object_type) ? mdb_get_objtype_string(entry->object_type) : "Unknown",
 			entry->object_name,
 			entry->table_pg);
 		}

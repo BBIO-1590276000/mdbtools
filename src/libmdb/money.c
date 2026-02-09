@@ -21,7 +21,7 @@
 
 #define MAX_MONEY_PRECISION   20
 #define MAX_NUMERIC_PRECISION 40
-/* 
+/*
 ** these routines are copied from the freetds project which does something
 ** very similiar
 */
@@ -39,13 +39,14 @@ static char *array_to_string(unsigned char *array, size_t len, int unsigned scal
  */
 char *mdb_money_to_string(MdbHandle *mdb, int start)
 {
-	const int num_bytes=8, scale=4;
+	#define MONEY_NUM_BYTES 8
+	const int num_bytes=MONEY_NUM_BYTES, scale=4;
 	int i;
 	int neg=0;
 	unsigned char multiplier[MAX_MONEY_PRECISION] = { 1 };
 	unsigned char temp[MAX_MONEY_PRECISION];
 	unsigned char product[MAX_MONEY_PRECISION] = { 0 };
-	unsigned char bytes[num_bytes];
+	unsigned char bytes[MONEY_NUM_BYTES];
 
 	memcpy(bytes, mdb->pg_buf + start, num_bytes);
 
@@ -75,13 +76,14 @@ char *mdb_money_to_string(MdbHandle *mdb, int start)
 }
 
 char *mdb_numeric_to_string(MdbHandle *mdb, int start, int scale, int prec) {
-       const int num_bytes = 16;
+       #define NUMERIC_NUM_BYTES 16
+       const int num_bytes = NUMERIC_NUM_BYTES;
        int i;
        int neg=0;
        unsigned char multiplier[MAX_NUMERIC_PRECISION] = { 1 };
        unsigned char temp[MAX_NUMERIC_PRECISION];
        unsigned char product[MAX_NUMERIC_PRECISION] = { 0 };
-       unsigned char bytes[num_bytes];
+       unsigned char bytes[NUMERIC_NUM_BYTES];
 
        memcpy(bytes, mdb->pg_buf + start + 1, num_bytes);
 
@@ -133,7 +135,7 @@ static char *array_to_string(unsigned char *array, size_t len, unsigned int scal
 {
 	char *s;
 	unsigned int top, i, j=0;
-	
+
        for (top=len;(top>0) && (top-1>scale) && !array[top-1];top--);
 
        /* allocate enough space for all digits + minus sign + decimal point + trailing NULL byte */
