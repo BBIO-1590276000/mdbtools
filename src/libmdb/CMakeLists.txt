@@ -210,6 +210,11 @@ endif ()
 
 add_library ( ${TARGET_NAME} SHARED ${SOURCES} )
 
+# On Windows, automatically export all symbols (generates .lib)
+if(MSVC)
+    set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 # Configure include directories
 target_include_directories(
     ${TARGET_NAME}
@@ -232,12 +237,8 @@ else ()
         set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "mdb${OUTPUT_NAME_SUFFIX}")
     endif()
 endif ()
-# if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-# 	target_compile_options( ${TARGET_NAME} PRIVATE "/CompileAs:0" )
-# endif ()
+
 set_property(TARGET ${TARGET_NAME} PROPERTY C_STANDARD 11)
-#target_compile_features(${TARGET_NAME} PRIVATE c_std_11)
-#target_compile_features(${TARGET_NAME} PRIVATE cxx_std_11)
 
 # Define TLS support based on compiler
 if(MSVC)
@@ -247,6 +248,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 else()
     target_compile_definitions(${TARGET_NAME} PUBLIC "TLS=")
 endif()
+
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
     set_target_properties( ${TARGET_NAME} PROPERTIES MACHO_COMPATIBILITY_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT} MACHO_CURRENT_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT})
     set ( CMAKE_SHARED_LINKER_FLAGS "-shared -framework CoreServices -framework ApplicationServices ${CMAKE_SHARED_LINKER_FLAGS}" CACHE STRING "Linker flags" FORCE )
@@ -266,8 +268,71 @@ elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     endif()
 endif()
 
+
 install (
     TARGETS ${TARGET_NAME}
-    DESTINATION ${INSTALLDIR}
-    EXCLUDE_FROM_ALL
+    LIBRARY DESTINATION ${INSTALL_DIR}/lib
+    ARCHIVE DESTINATION ${INSTALL_DIR}/lib
+    RUNTIME DESTINATION ${INSTALL_DIR}/bin
+)
+
+# Install PDB files on Windows for debugging
+if(MSVC)
+    install(
+        FILES $<TARGET_PDB_FILE:${TARGET_NAME}>
+        DESTINATION ${INSTALL_DIR}/bin
+        OPTIONAL
+    )
+endif()
+
+# Install public headers
+install (
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/include/mdbtools.h"
+        "${CMAKE_CURRENT_BINARY_DIR}/include/mdbver.h"
+        "${CMAKE_SOURCE_DIR}/include/mdbsql.h"
+    DESTINATION ${INSTALL_DIR}/include
+)
+
+# Install mdbfakeglib.h if not using system GLib
+if(NOT GLIB2_FOUND)
+    install (
+        FILES "${CMAKE_SOURCE_DIR}/include/mdbfakeglib.h"
+        DESTINATION ${INSTALL_DIR}/include
+    )
+endif()
+
+# Install Windows-specific wrapper headers and ya_getopt
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    install (
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/include/strings.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/include/getopt.h"
+            "${MESTRELAB_DIR}/ya_getopt/ya_getopt.h"
+        DESTINATION ${INSTALL_DIR}/include
+    )
+endif()
+
+# Configure and install CMake config files for find_package support
+set(CMAKE_INSTALL_PREFIX_CONFIGURED "${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_INSTALL_INCLUDEDIR "include")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
+    @ONLY
+)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfigVersion.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
+    @ONLY
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
+    DESTINATION ${INSTALL_DIR}/lib/cmake/mdb
 )

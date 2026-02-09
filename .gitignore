@@ -63,3 +63,4 @@ public/
 *.css.map
 temp-man-pages/
 /build
+/install

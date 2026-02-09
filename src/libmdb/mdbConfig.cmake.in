@@ -1,0 +1,33 @@
+# mdb config module - allows find_package(mdb) to work
+set(mdb_FOUND TRUE)
+
+if(NOT TARGET mdb::mdb)
+    add_library(mdb::mdb SHARED IMPORTED GLOBAL)
+
+    # Get the install prefix
+    get_filename_component(mdb_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX_CONFIGURED@" ABSOLUTE)
+
+    # Set the library location based on platform
+    if(WIN32)
+        set(mdb_LIBRARY "${mdb_INSTALL_PREFIX}/lib/libmdb${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(mdb_IMPLIB "${mdb_INSTALL_PREFIX}/lib/libmdb.lib")
+    else()
+        set(mdb_LIBRARY "${mdb_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mdb${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    endif()
+
+    set_target_properties(mdb::mdb PROPERTIES
+        IMPORTED_LOCATION "${mdb_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${mdb_INSTALL_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@"
+    )
+
+    # On Windows, set the import library
+    if(WIN32 AND EXISTS "${mdb_IMPLIB}")
+        set_target_properties(mdb::mdb PROPERTIES
+            IMPORTED_IMPLIB "${mdb_IMPLIB}"
+        )
+    endif()
+
+    # Export the found library path and include directory
+    set(mdb_LIBRARIES mdb::mdb)
+    set(mdb_INCLUDE_DIRS "${mdb_INSTALL_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@")
+endif()

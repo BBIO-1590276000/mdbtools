@@ -14,6 +14,13 @@ endif()
 
 message(STATUS "Commit count: ${GIT_COMMIT_COUNT}")
 
+if (CMAKE_INSTALL_PREFIX)
+    set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
+else()
+    set(INSTALL_DIR "${CMAKE_SOURCE_DIR}/install/${CMAKE_SYSTEM_NAME}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
+endif()
+message(STATUS "INSTALL_DIR set to: ${INSTALL_DIR}")
+
 project("MDB Tools" VERSION 1.0.1 LANGUAGES C)
 
 option(BUILD_LIBRARY "Build the MDB library" ON)

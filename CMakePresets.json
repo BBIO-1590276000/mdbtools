@@ -10,7 +10,7 @@
             "binaryDir": "${sourceDir}/build/VS2019/x86",
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/VS2019/x86"
             },
             "condition": {
                 "type": "equals",
@@ -24,7 +24,10 @@
             "displayName": "Configure Preset for VS2019 amd64",
             "description": "Sets VS2019 generator for amd64",
             "architecture": "x64",
-            "binaryDir": "${sourceDir}/build/VS2019/x64"
+            "binaryDir": "${sourceDir}/build/VS2019/x64",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/VS2019/x64"
+            }
         },
         {
             "inherits": "VS2019-x64",
@@ -32,7 +35,10 @@
             "displayName": "Configure Preset for VS2022 (VS2019 build tools) amd64",
             "description": "Sets VS2022 generator with VS2019 toolset for amd64",
             "generator": "Visual Studio 17 2022",
-            "toolset": "v142"
+            "toolset": "v142",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/VS2022(VS2019)/x64"
+            }
         },
         {
             "inherits": "VS2019-x86",
@@ -40,7 +46,10 @@
             "displayName": "Configure Preset for VS2022 (VS2019 build tools) x86",
             "description": "Sets VS2022 generator with VS2019 toolset for x86",
             "generator": "Visual Studio 17 2022",
-            "toolset": "v142"
+            "toolset": "v142",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/VS2022(VS2019)/x86"
+            }
         },
         {
             "name": "macx-clang-universal",
@@ -50,7 +59,7 @@
             "binaryDir": "${sourceDir}/build/macx-clang-universal",
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/macx-clang-universal",
                 "CMAKE_OSX_ARCHITECTURES" : "x86_64;arm64",
                 "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
             },
@@ -73,7 +82,8 @@
             },
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
-                "TARGET_ARCH": "64bit"
+                "TARGET_ARCH": "64bit",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/linux-gcc_64"
             }
         }
     ],
