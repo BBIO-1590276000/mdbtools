@@ -1,0 +1,12 @@
+// in linux some info is added to the .comment section of the ELF binary
+// use this command to print this information
+// readelf -p .comment /path/to/SA*.so
+
+#ident "File Name: @TARGET_NAME@.so"
+#ident "Version: @TARGET_VER_MAJ@.@TARGET_VER_MIN@.@TARGET_VER_PAT@"
+#ident "Product Name: @PRODUCT_NAME@"
+#ident "Product Version: @PRODUCT_VER_MAJ@.@PRODUCT_VER_MIN@.@PRODUCT_VER_PAT@"
+#ident "Revision: @TARGET_VER_REV@"
+#ident "Description: @TARGET_DESCRIPTION@"
+#ident "Company Name: @PRODUCT_COMPANY_NAME@"
+#ident "Copyright: @PRODUCT_COPYRIGHT@"

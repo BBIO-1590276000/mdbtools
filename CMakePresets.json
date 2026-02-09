@@ -1,0 +1,396 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "VS2019-x86",
+            "displayName": "Configure Preset for VS2019 x86",
+            "description": "Sets VS2019 generator for x86",
+            "generator": "Visual Studio 16 2019",
+            "architecture": "Win32",
+            "binaryDir": "${sourceDir}/build/VS2019/x86",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "inherits": "VS2019-x86",
+            "name": "VS2019-x64",
+            "displayName": "Configure Preset for VS2019 amd64",
+            "description": "Sets VS2019 generator for amd64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/VS2019/x64"
+        },
+        {
+            "inherits": "VS2019-x64",
+            "name": "VS2022(VS2019)-x64",
+            "displayName": "Configure Preset for VS2022 (VS2019 build tools) amd64",
+            "description": "Sets VS2022 generator with VS2019 toolset for amd64",
+            "generator": "Visual Studio 17 2022",
+            "toolset": "v142"
+        },
+        {
+            "inherits": "VS2019-x86",
+            "name": "VS2022(VS2019)-x86",
+            "displayName": "Configure Preset for VS2022 (VS2019 build tools) x86",
+            "description": "Sets VS2022 generator with VS2019 toolset for x86",
+            "generator": "Visual Studio 17 2022",
+            "toolset": "v142"
+        },
+        {
+            "name": "wasm139 windows_env",
+            "hidden": true,
+            "displayName": "Emscripten 1.39.x Windows environment",
+            "description": "Sets Emscripten 1.39.x Windows environment variables",
+            "environment": {
+                "PATH": "$penv{USERPROFILE}\\dev\\emsdk139;$penv{USERPROFILE}\\dev\\emsdk139\\upstream\\emscripten;$penv{PATH}",
+                "EMSDK": "$penv{USERPROFILE}\\dev\\emsdk139",
+                "EM_CONFIG": "$penv{USERPROFILE}\\dev\\emsdk139\\.emscripten",
+                "EM_CACHE": "$penv{USERPROFILE}\\dev\\emsdk139\\upstream\\emscripten\\cache",
+                "EMSDK_NODE": "$penv{USERPROFILE}\\dev\\emsdk139\\node\\20.18.0_64bit\\bin\\node.exe",
+                "EMSDK_PYTHON": "$penv{USERPROFILE}\\dev\\emsdk139\\python\\3.9.2-nuget_64bit\\python.exe"
+            }
+        },
+        {
+            "name": "wasm-1.39.8-32bit Windows",
+            "displayName": "Configure Preset for wasm-1.39.8-32bit Windows",
+            "description": "Sets Makefile for WebAssembly (32-bit)",
+            "inherits": "wasm139 windows_env",
+            "generator": "Ninja Multi-Config",
+            "toolchainFile": "$penv{USERPROFILE}/dev/emsdk139/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+            "binaryDir": "${sourceDir}/build/wasm_139_32",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;MinSizeRel",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
+            }
+        },
+        {
+            "name": "macx-clang-universal",
+            "displayName": "Configure Preset for macx-clang universal",
+            "description": "Sets makefile generator for clang",
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build/macx-clang-universal",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
+                "CMAKE_OSX_ARCHITECTURES" : "x86_64;arm64",
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            }
+        },
+        {
+            "name": "Generic Linux",
+            "displayName": "Linux amd64",
+            "description": "Sets up Linux amd64 Ninja",
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build/linux-gcc_64",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+                "TARGET_ARCH": "64bit"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "VS2019-x86-Release",
+            "configurePreset": "VS2019-x86",
+            "configuration": "RelWithDebInfo",
+            "description": "Builds using the VS2019-x86-Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2019-x86-Debug",
+            "configurePreset": "VS2019-x86",
+            "configuration": "Debug",
+            "description": "Build using the VS2019-x86-Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2019-x64-Release",
+            "configurePreset": "VS2019-x64",
+            "configuration": "RelWithDebInfo",
+            "description": "Builds using the VS2019-x64-Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2019-x64-Debug",
+            "configurePreset": "VS2019-x64",
+            "configuration": "Debug",
+            "description": "Build using the VS2019-x64-Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2022(VS2019)-x86-Release",
+            "configurePreset": "VS2022(VS2019)-x86",
+            "configuration": "RelWithDebInfo",
+            "description": "Builds using the VS2022(VS2019)-x86-Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2022(VS2019)-x86-Debug",
+            "configurePreset": "VS2022(VS2019)-x86",
+            "configuration": "Debug",
+            "description": "Build using the VS2022(VS2019)-x86-Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2022(VS2019)-x64-Release",
+            "configurePreset": "VS2022(VS2019)-x64",
+            "configuration": "RelWithDebInfo",
+            "description": "Builds using the VS2022(VS2019)-x64-Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "VS2022(VS2019)-x64-Debug",
+            "configurePreset": "VS2022(VS2019)-x64",
+            "configuration": "Debug",
+            "description": "Build using the VS2022(VS2019)-x64-Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "Generic Linux Debug",
+            "configurePreset": "Generic Linux",
+            "configuration": "Debug",
+            "description": "Build using the Generic Linux Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "Generic Linux Release",
+            "configurePreset": "Generic Linux",
+            "configuration": "Release",
+            "description": "Build using the Generic Linux Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "macx-clang-universal Debug",
+            "configurePreset": "macx-clang-universal",
+            "configuration": "Debug",
+            "description": "Build using the macx-clang-universal Debug configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "macx-clang-universal Release",
+            "configurePreset": "macx-clang-universal",
+            "configuration": "Release",
+            "description": "Build using the macx-clang-universal Release configure preset",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "wasm-1.39.8-32bit Windows Release",
+            "configurePreset": "wasm-1.39.8-32bit Windows",
+            "configuration": "MinSizeRel",
+            "description": "Build using the wasm-1.39.8-32bit Windows Release configure preset",
+            "inheritConfigureEnvironment": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        },
+        {
+            "name": "wasm-1.39.8-32bit Windows Debug",
+            "configurePreset": "wasm-1.39.8-32bit Windows",
+            "configuration": "Debug",
+            "description": "Build using the wasm-1.39.8-32bit Windows Debug configure preset",
+            "inheritConfigureEnvironment": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "targets": [ "install" ]
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "msvc2019-x86",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "VS2019-x86"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2019-x86-Release"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2019-x86-Debug"
+                }
+            ]
+        },
+        {
+            "name": "msvc2019-x64",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "VS2019-x64"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2019-x64-Release"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2019-x64-Debug"
+                }
+            ]
+        },
+        {
+            "name": "msvc2022_vs2019-x86",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "VS2022(VS2019)-x86"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2022(VS2019)-x86-Release"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2022(VS2019)-x86-Debug"
+                }
+            ]
+        },
+        {
+            "name": "msvc2022_vs2019-x64",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "VS2022(VS2019)-x64"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2022(VS2019)-x64-Release"
+                },
+                {
+                    "type": "build",
+                    "name": "VS2022(VS2019)-x64-Debug"
+                }
+            ]
+        },
+        {
+            "name": "linux",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "Generic Linux"
+                },
+                {
+                    "type": "build",
+                    "name": "Generic Linux Release"
+                },
+                {
+                    "type": "build",
+                    "name": "Generic Linux Debug"
+                }
+            ]
+        },
+        {
+            "name": "macos-universal",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "macx-clang-universal"
+                },
+                {
+                    "type": "build",
+                    "name": "macx-clang-universal Release"
+                },
+                {
+                    "type": "build",
+                    "name": "macx-clang-universal Debug"
+                }
+            ]
+        },
+        {
+            "name": "wasm-139-windows",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "wasm-1.39.8-32bit Windows"
+                },
+                {
+                    "type": "build",
+                    "name": "wasm-1.39.8-32bit Windows Release"
+                }
+            ]
+        }
+    ]
+}
