@@ -24,23 +24,46 @@ message( "Version for target ${TARGET_NAME} was set to ${TARGET_VER_MAJ}.${TARGE
 # Configure header files from .in templates
 include(CheckIncludeFile)
 include(CheckTypeSize)
+include(CheckFunctionExists)
+
+# Set feature test macros for POSIX functions (needed for wcstombs_l, newlocale, etc.)
+if(APPLE)
+    # macOS requires _DARWIN_C_SOURCE and _USE_EXTENDED_LOCALES_
+    set(CMAKE_REQUIRED_DEFINITIONS "-D_DARWIN_C_SOURCE -D_USE_EXTENDED_LOCALES_")
+elseif(NOT WIN32)
+    set(CMAKE_REQUIRED_DEFINITIONS "-D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200809L")
+endif()
 
 # Check for required headers
-check_include_file("iconv.h" HAVE_ICONV_H)
-check_include_file("xlocale.h" HAVE_XLOCALE_H)
+if(APPLE)
+    # On macOS, use xlocale instead of iconv
+    set(HAVE_ICONV_H OFF)
+    set(HAVE_XLOCALE_H ON)
+else()
+    check_include_file("iconv.h" HAVE_ICONV_H)
+    check_include_file("xlocale.h" HAVE_XLOCALE_H)
+endif()
 check_include_file("glib.h" HAVE_GLIB_H)
+check_function_exists("strptime" HAVE_STRPTIME)
+check_function_exists("fmemopen" HAVE_FMEMOPEN)
+check_function_exists("gmtime_r" HAVE_GMTIME_R)
+check_function_exists("wcstombs_l" HAVE_WCSTOMBS_L)
+check_function_exists("mbstowcs_l" HAVE_MBSTOWCS_L)
+check_function_exists("reallocf" HAVE_REALLOCF)
+check_function_exists("vasprintf" HAVE_VASPRINTF)
+check_function_exists("vasnprintf" HAVE_VASNPRINTF)
 
 # Set configuration variables for mdbtools.h
 if(HAVE_ICONV_H)
-    set(HAVE_ICONV_H ON)
+    set(HAVE_ICONV_H 1)
 else()
-    set(HAVE_ICONV_H OFF)
+    set(HAVE_ICONV_H 0)
 endif()
 
 if(HAVE_XLOCALE_H)
-    set(HAVE_XLOCALE_H ON)
+    set(HAVE_XLOCALE_H 1)
 else()
-    set(HAVE_XLOCALE_H OFF)
+    set(HAVE_XLOCALE_H 0)
 endif()
 
 # Set GLib header
@@ -226,6 +249,45 @@ target_include_directories(
 
 if(GLIB2_FOUND)
     target_include_directories(${TARGET_NAME} PRIVATE ${GLIB2_INCLUDE_DIRS})
+endif()
+
+# Add feature test macros for POSIX functions
+if(APPLE)
+    # macOS requires _DARWIN_C_SOURCE and _USE_EXTENDED_LOCALES_ to expose locale functions
+    target_compile_definitions(${TARGET_NAME} PRIVATE
+        _DARWIN_C_SOURCE
+        _USE_EXTENDED_LOCALES_
+    )
+elseif(NOT WIN32)
+    target_compile_definitions(${TARGET_NAME} PRIVATE
+        _XOPEN_SOURCE=700
+        _POSIX_C_SOURCE=200809L
+    )
+endif()
+
+if (HAVE_STRPTIME)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_STRPTIME)
+endif()
+if(HAVE_FMEMOPEN)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_FMEMOPEN)
+endif()
+if (HAVE_GMTIME_R)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_GMTIME_R)
+endif()
+if (HAVE_WCSTOMBS_L)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_WCSTOMBS_L)
+endif()
+if (HAVE_MBSTOWCS_L)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_MBSTOWCS_L)
+endif()
+if (HAVE_REALLOCF)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_REALLOCF)
+endif()
+if (HAVE_VASPRINTF)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_VASPRINTF)
+endif()
+if (HAVE_VASNPRINTF)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_VASNPRINTF)
 endif()
 
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
