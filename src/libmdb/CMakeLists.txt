@@ -158,7 +158,7 @@ message(STATUS "Generated mdbtools.h and mdbver.h from templates")
 # Collect libmdb source files from mdbtools
 set ( SOURCES )  # Ensure the variable is empty
 file(GLOB MDBTOOLS_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/libmdb/*.c"
+    "${CMAKE_CURRENT_LIST_DIR}/*.c"
 )
 list(APPEND SOURCES ${MDBTOOLS_SOURCES})
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -353,7 +353,7 @@ install (
     FILES
         "${CMAKE_CURRENT_BINARY_DIR}/include/mdbtools.h"
         "${CMAKE_CURRENT_BINARY_DIR}/include/mdbver.h"
-        "${CMAKE_SOURCE_DIR}/include/mdbsql.h"
+        "${MDBTOOLS_INCLUDE_DIR}/mdbsql.h"
     DESTINATION ${INSTALL_DIR}/include
 )
 
