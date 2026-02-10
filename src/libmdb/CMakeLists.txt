@@ -87,7 +87,7 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # Configure header files
 configure_file(
-    "${CMAKE_SOURCE_DIR}/include/mdbtools.h.in"
+    "${MDBTOOLS_INCLUDE_DIR}/mdbtools.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/include/mdbtools.h"
     @ONLY
 )
@@ -97,7 +97,7 @@ set(PACKAGE "${PRODUCT_NAME}")
 set(VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 configure_file(
-    "${CMAKE_SOURCE_DIR}/include/mdbver.h.in"
+    "${MDBTOOLS_INCLUDE_DIR}/mdbver.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/include/mdbver.h"
     @ONLY
 )
@@ -225,7 +225,7 @@ if ( BUILD_GLIB2 )
 
     if(NOT GLIB2_FOUND)
         message(STATUS "GLib not found via pkg-config, will use internal implementation")
-        set(GLIB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
+        set(GLIB_INCLUDE_DIR "${MDBTOOLS_INCLUDE_DIR}")
     else()
         message(STATUS "Using system GLib: ${GLIB2_INCLUDE_DIRS}")
     endif()
@@ -244,11 +244,12 @@ target_include_directories(
     PUBLIC
     "${MESTRELAB_DIR}/ya_getopt"
     "${CMAKE_CURRENT_BINARY_DIR}/include"  # Generated headers first
-    "${CMAKE_SOURCE_DIR}/include"
 )
 
 if(GLIB2_FOUND)
-    target_include_directories(${TARGET_NAME} PRIVATE ${GLIB2_INCLUDE_DIRS})
+    target_include_directories(${TARGET_NAME} PUBLIC ${GLIB2_INCLUDE_DIRS})
+else()
+    target_include_directories(${TARGET_NAME} PUBLIC ${MDBTOOLS_INCLUDE_DIR})
 endif()
 
 # Add feature test macros for POSIX functions
@@ -359,7 +360,7 @@ install (
 # Install mdbfakeglib.h if not using system GLib
 if(NOT GLIB2_FOUND)
     install (
-        FILES "${CMAKE_SOURCE_DIR}/include/mdbfakeglib.h"
+        FILES "${MDBTOOLS_INCLUDE_DIR}/mdbfakeglib.h"
         DESTINATION ${INSTALL_DIR}/include
     )
 endif()
