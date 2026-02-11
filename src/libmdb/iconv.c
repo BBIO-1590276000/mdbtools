@@ -53,7 +53,7 @@ static size_t decompressed_to_utf8_with_iconv(MdbHandle *mdb, const char *in_ptr
 
 	while (len_out) {
 		iconv(mdb->iconv_in, (ICONV_CONST char **)&in_ptr, &len_in, &out_ptr, &len_out);
-		/* 
+		/*
 		 * Have seen database with odd number of bytes in UCS-2, shouldn't happen but protect against it
 		 */
 		if (!IS_JET3(mdb) && len_in<=1) {
@@ -123,7 +123,14 @@ static size_t decompressed_to_utf8_without_iconv(MdbHandle *mdb, const char *in_
 			return latin1_to_utf8_without_iconv(in_ptr, len_in, dest, dlen);
 		}
 		int count = 0;
+#ifdef _MSC_VER
+		count = snprintf(dest, dlen, "%.*s", (int)len_in, in_ptr);
+		if (count < 0 || (size_t)count >= dlen) {
+			count = 0;
+		}
+#else
 		snprintf(dest, dlen, "%.*s%n", (int)len_in, in_ptr, &count);
+#endif
 		return count;
 	}
     return unicode2ascii_locale(mdb->locale, in_ptr, len_in, dest, dlen);
@@ -193,7 +200,14 @@ mdb_ascii2unicode(MdbHandle *mdb, const char *src, size_t slen, char *dest, size
 #else
 	if (IS_JET3(mdb)) {
 		int count;
+#ifdef _MSC_VER
+		count = snprintf(out_ptr, len_out, "%.*s", (int)len_in, in_ptr);
+		if (count < 0 || (size_t)count >= len_out) {
+			count = 0;
+		}
+#else
 		snprintf(out_ptr, len_out, "%.*s%n", (int)len_in, in_ptr, &count);
+#endif
 		dlen = count;
 	} else {
 		unsigned int i;
