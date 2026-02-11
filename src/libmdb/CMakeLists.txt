@@ -157,10 +157,32 @@ message(STATUS "Generated mdbtools.h and mdbver.h from templates")
 
 # Collect libmdb source files from mdbtools
 set ( SOURCES )  # Ensure the variable is empty
-file(GLOB MDBTOOLS_SOURCES
-    "${CMAKE_CURRENT_LIST_DIR}/*.c"
+list(APPEND SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/backend.c
+    ${CMAKE_CURRENT_LIST_DIR}/catalog.c
+    ${CMAKE_CURRENT_LIST_DIR}/data.c
+    ${CMAKE_CURRENT_LIST_DIR}/dump.c
+    ${CMAKE_CURRENT_LIST_DIR}/file.c
+    ${CMAKE_CURRENT_LIST_DIR}/iconv.c
+    ${CMAKE_CURRENT_LIST_DIR}/index.c
+    ${CMAKE_CURRENT_LIST_DIR}/like.c
+    ${CMAKE_CURRENT_LIST_DIR}/map.c
+    ${CMAKE_CURRENT_LIST_DIR}/money.c
+    ${CMAKE_CURRENT_LIST_DIR}/options.c
+    ${CMAKE_CURRENT_LIST_DIR}/props.c
+    ${CMAKE_CURRENT_LIST_DIR}/rc4.c
+    ${CMAKE_CURRENT_LIST_DIR}/sargs.c
+    ${CMAKE_CURRENT_LIST_DIR}/stats.c
+    ${CMAKE_CURRENT_LIST_DIR}/table.c
+    ${CMAKE_CURRENT_LIST_DIR}/version.c
+    ${CMAKE_CURRENT_LIST_DIR}/worktable.c
+    ${CMAKE_CURRENT_LIST_DIR}/write.c
 )
-list(APPEND SOURCES ${MDBTOOLS_SOURCES})
+if(NOT HAVE_GLIB_H)
+    list(APPEND SOURCES
+        ${CMAKE_CURRENT_LIST_DIR}/fakeglib.c
+    )
+endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     # Add Windows-specific source files if needed)
     list(APPEND SOURCES
@@ -236,6 +258,8 @@ add_library ( ${TARGET_NAME} SHARED ${SOURCES} )
 # On Windows, automatically export all symbols (generates .lib)
 if(MSVC)
     set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    # Disable module definition file generation to use WINDOWS_EXPORT_ALL_SYMBOLS instead
+    #set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS_REPLACES_EXPORTS ON)
 endif()
 
 # Configure include directories
@@ -399,3 +423,4 @@ install(
         "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
     DESTINATION ${INSTALL_DIR}/lib/cmake/mdb
 )
+
