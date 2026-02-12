@@ -212,47 +212,6 @@ elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     )
 endif()
 
-# if ( NOT BUILD_GLIB2 )
-# 	if ( WINDOWS OR APPLE )
-# 		set( BUILD_GLIB2 1)
-# 	endif ()
-# endif ()
-
-if ( BUILD_GLIB2 )
-    add_definitions ( -DLIBMDB_EXPORTS
-            -DGLIB_STATIC_COMPILATION
-            -DLINK_SIZE=2
-            -DMAX_NAME_SIZE=32
-            -DMAX_NAME_COUNT=10000
-            -D NEWLINE=-1
-            -DPOSIX_MALLOC_THRESHOLD=10
-            -DMATCH_LIMIT=10000000
-            -DMATCH_LIMIT_RECURSION=1000000
-            )
-    if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-        # Add Windows-specific sources if needed
-        add_definitions ( -D_CRT_SECURE_NO_WARNINGS
-                -D_CRT_NONSTDC_NO_WARNINGS
-        )
-    else ()
-        add_definitions ( "-DLIBDIR=\"${CMAKE_INSTALL_PREFIX}/lib\"" )
-    endif()
-
-    # Use glib from system or bundled version
-    # Note: mdbtools expects glib to be available via pkg-config
-    find_package(PkgConfig QUIET)
-    if(PKG_CONFIG_FOUND)
-        pkg_check_modules(GLIB2 glib-2.0)
-    endif()
-
-    if(NOT GLIB2_FOUND)
-        message(STATUS "GLib not found via pkg-config, will use internal implementation")
-        set(GLIB_INCLUDE_DIR "${MDBTOOLS_INCLUDE_DIR}")
-    else()
-        message(STATUS "Using system GLib: ${GLIB2_INCLUDE_DIRS}")
-    endif()
-endif ()
-
 add_library ( ${TARGET_NAME} SHARED ${SOURCES} )
 
 # On Windows, automatically export all symbols (generates .lib)
@@ -266,15 +225,11 @@ endif()
 target_include_directories(
     ${TARGET_NAME}
     PUBLIC
-    "${MESTRELAB_DIR}/ya_getopt"
     "${CMAKE_CURRENT_BINARY_DIR}/include"  # Generated headers first
+    $<$<PLATFORM_ID:Windows>:${MESTRELAB_DIR}/ya_getopt>
 )
 
-if(GLIB2_FOUND)
-    target_include_directories(${TARGET_NAME} PUBLIC ${GLIB2_INCLUDE_DIRS})
-else()
-    target_include_directories(${TARGET_NAME} PUBLIC ${MDBTOOLS_INCLUDE_DIR})
-endif()
+target_include_directories(${TARGET_NAME} PUBLIC ${MDBTOOLS_INCLUDE_DIR})
 
 # Add feature test macros for POSIX functions
 if(APPLE)
@@ -329,39 +284,32 @@ set_property(TARGET ${TARGET_NAME} PROPERTY C_STANDARD 11)
 
 # Define TLS support based on compiler
 if(MSVC)
-    target_compile_definitions(${TARGET_NAME} PUBLIC "TLS=__declspec(thread)")
+    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=__declspec(thread)")
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_definitions(${TARGET_NAME} PUBLIC "TLS=__thread")
+    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=__thread")
 else()
-    target_compile_definitions(${TARGET_NAME} PUBLIC "TLS=")
+    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=")
 endif()
 
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
-    set_target_properties( ${TARGET_NAME} PROPERTIES MACHO_COMPATIBILITY_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT} MACHO_CURRENT_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT})
-    set ( CMAKE_SHARED_LINKER_FLAGS "-shared -framework CoreServices -framework ApplicationServices ${CMAKE_SHARED_LINKER_FLAGS}" CACHE STRING "Linker flags" FORCE )
-    set_target_properties( ${TARGET_NAME} PROPERTIES SUFFIX ".so" )
-    target_link_libraries( ${TARGET_NAME}
-        PRIVATE iconv
+    set_target_properties( ${TARGET_NAME} PROPERTIES
+        MACHO_COMPATIBILITY_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}
+        MACHO_CURRENT_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}
+        SUFFIX ".so"
     )
-    if(GLIB2_FOUND)
-        target_link_libraries( ${TARGET_NAME} PRIVATE ${GLIB2_LIBRARIES})
-    endif()
 elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     target_link_libraries( ${TARGET_NAME}
-    PRIVATE dl
+        PRIVATE dl
     )
-    if(GLIB2_FOUND)
-        target_link_libraries( ${TARGET_NAME} PRIVATE ${GLIB2_LIBRARIES})
-    endif()
 endif()
 
 
 set(MDBTOOLS_INSTALL_INCLUDE_DIR "${MDBTOOLS_INSTALL_DIR}/include")
 if(MDB_INSTALL_ONLY_LIBRARY)
-    set(MDBTOOLS_INSTALL_LIB_ DIR "${MDBTOOLS_INSTALL_DIR}")
+    set(MDBTOOLS_INSTALL_LIB_DIR "${MDBTOOLS_INSTALL_DIR}")
     set(MDBTOOLS_INSTALL_BIN_DIR "${MDBTOOLS_INSTALL_DIR}")
 else()
-    set(MDBTOOLS_INSTALL_LIB_ DIR "${MDBTOOLS_INSTALL_DIR}/lib")
+    set(MDBTOOLS_INSTALL_LIB_DIR "${MDBTOOLS_INSTALL_DIR}/lib")
     set(MDBTOOLS_INSTALL_BIN_DIR "${MDBTOOLS_INSTALL_DIR}/bin")
 endif()
 
@@ -392,12 +340,10 @@ if (NOT MDB_INSTALL_ONLY_LIBRARY)
     )
 
     # Install mdbfakeglib.h if not using system GLib
-    if(NOT GLIB2_FOUND)
-        install (
-            FILES "${MDBTOOLS_INCLUDE_DIR}/mdbfakeglib.h"
-            DESTINATION ${MDBTOOLS_INSTALL_INCLUDE_DIR}
-        )
-    endif()
+    install (
+        FILES "${MDBTOOLS_INCLUDE_DIR}/mdbfakeglib.h"
+        DESTINATION ${MDBTOOLS_INSTALL_INCLUDE_DIR}
+    )
 
     # Install Windows-specific wrapper headers and ya_getopt
     if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -434,4 +380,3 @@ if (NOT MDB_INSTALL_ONLY_LIBRARY)
         DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}/cmake/mdb
     )
 endif()
-
