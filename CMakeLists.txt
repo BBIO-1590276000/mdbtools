@@ -17,16 +17,20 @@ endif()
 
 message(STATUS "Revision: ${REVISION_NUMBER}")
 
-if (CMAKE_INSTALL_PREFIX)
-    set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
-else()
-    set(INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/install/${CMAKE_SYSTEM_NAME}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
-endif()
-message(STATUS "INSTALL_DIR set to: ${INSTALL_DIR}")
-
 project("MDB Tools" VERSION 1.0.1 LANGUAGES C)
 
-option(BUILD_LIBRARY "Build the MDB library" ON)
+option(MDB_BUILD_LIBRARY "Build the MDB library" ON)
+option(MDB_INSTALL_PER_CONFIG "Install per configuration (e.g., Debug, Release)" ON)
+option(MDB_INSTALL_ONLY_LIBRARY "Install only the library without headers" OFF)
+
+if(NOT DEFINED MDBTOOLS_INSTALL_DIR AND MDB_INSTALL_PER_CONFIG)
+    if (CMAKE_INSTALL_PREFIX)
+        set(MDBTOOLS_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
+    else()
+        set(MDBTOOLS_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/install/${CMAKE_SYSTEM_NAME}/$<CONFIG>" CACHE PATH "Installation directory" FORCE)
+    endif()
+endif()
+message(STATUS "MDBTOOLS_INSTALL_DIR set to: ${MDBTOOLS_INSTALL_DIR}")
 
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/include")
     set(MDBTOOLS_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
@@ -42,6 +46,6 @@ else()
     message(STATUS "mestrelab directory not found")
 endif()
 
-if (BUILD_LIBRARY)
+if (MDB_BUILD_LIBRARY)
     add_subdirectory(src/libmdb)
 endif()

@@ -356,71 +356,82 @@ elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
 endif()
 
 
+set(MDBTOOLS_INSTALL_INCLUDE_DIR "${MDBTOOLS_INSTALL_DIR}/include")
+if(MDB_INSTALL_ONLY_LIBRARY)
+    set(MDBTOOLS_INSTALL_LIB_ DIR "${MDBTOOLS_INSTALL_DIR}")
+    set(MDBTOOLS_INSTALL_BIN_DIR "${MDBTOOLS_INSTALL_DIR}")
+else()
+    set(MDBTOOLS_INSTALL_LIB_ DIR "${MDBTOOLS_INSTALL_DIR}/lib")
+    set(MDBTOOLS_INSTALL_BIN_DIR "${MDBTOOLS_INSTALL_DIR}/bin")
+endif()
+
 install (
     TARGETS ${TARGET_NAME}
-    LIBRARY DESTINATION ${INSTALL_DIR}/lib
-    ARCHIVE DESTINATION ${INSTALL_DIR}/lib
-    RUNTIME DESTINATION ${INSTALL_DIR}/bin
+    LIBRARY DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}
+    ARCHIVE DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${MDBTOOLS_INSTALL_BIN_DIR}
 )
 
 # Install PDB files on Windows for debugging
 if(MSVC)
     install(
         FILES $<TARGET_PDB_FILE:${TARGET_NAME}>
-        DESTINATION ${INSTALL_DIR}/bin
+        DESTINATION ${MDBTOOLS_INSTALL_BIN_DIR}
         OPTIONAL
     )
 endif()
 
-# Install public headers
-install (
-    FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/include/mdbtools.h"
-        "${CMAKE_CURRENT_BINARY_DIR}/include/mdbver.h"
-        "${MDBTOOLS_INCLUDE_DIR}/mdbsql.h"
-    DESTINATION ${INSTALL_DIR}/include
-)
-
-# Install mdbfakeglib.h if not using system GLib
-if(NOT GLIB2_FOUND)
-    install (
-        FILES "${MDBTOOLS_INCLUDE_DIR}/mdbfakeglib.h"
-        DESTINATION ${INSTALL_DIR}/include
-    )
-endif()
-
-# Install Windows-specific wrapper headers and ya_getopt
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if (NOT MDB_INSTALL_ONLY_LIBRARY)
+    # Install public headers
     install (
         FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/include/strings.h"
-            "${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h"
-            "${CMAKE_CURRENT_BINARY_DIR}/include/getopt.h"
-            "${MESTRELAB_DIR}/ya_getopt/ya_getopt.h"
-        DESTINATION ${INSTALL_DIR}/include
+            "${CMAKE_CURRENT_BINARY_DIR}/include/mdbtools.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/include/mdbver.h"
+            "${MDBTOOLS_INCLUDE_DIR}/mdbsql.h"
+        DESTINATION ${MDBTOOLS_INSTALL_INCLUDE_DIR}
+    )
+
+    # Install mdbfakeglib.h if not using system GLib
+    if(NOT GLIB2_FOUND)
+        install (
+            FILES "${MDBTOOLS_INCLUDE_DIR}/mdbfakeglib.h"
+            DESTINATION ${MDBTOOLS_INSTALL_INCLUDE_DIR}
+        )
+    endif()
+
+    # Install Windows-specific wrapper headers and ya_getopt
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        install (
+            FILES
+                "${CMAKE_CURRENT_BINARY_DIR}/include/strings.h"
+                "${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h"
+                "${CMAKE_CURRENT_BINARY_DIR}/include/getopt.h"
+                "${MESTRELAB_DIR}/ya_getopt/ya_getopt.h"
+            DESTINATION ${MDBTOOLS_INSTALL_INCLUDE_DIR}
+        )
+    endif()
+
+    # Configure and install CMake config files for find_package support
+    set(CMAKE_INSTALL_PREFIX_CONFIGURED "${CMAKE_INSTALL_PREFIX}")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
+        @ONLY
+    )
+
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfigVersion.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
+        @ONLY
+    )
+
+    install(
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
+        DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}/cmake/mdb
     )
 endif()
-
-# Configure and install CMake config files for find_package support
-set(CMAKE_INSTALL_PREFIX_CONFIGURED "${CMAKE_INSTALL_PREFIX}")
-set(CMAKE_INSTALL_INCLUDEDIR "include")
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
-    @ONLY
-)
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/mdbConfigVersion.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
-    @ONLY
-)
-
-install(
-    FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/mdbConfigVersion.cmake"
-    DESTINATION ${INSTALL_DIR}/lib/cmake/mdb
-)
 
