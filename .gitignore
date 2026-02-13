@@ -64,3 +64,4 @@ public/
 temp-man-pages/
 /build
 /install
+CMakeUserPresets.json

@@ -12,12 +12,12 @@ set( PRODUCT_COPYRIGHT "Copyright \\251 2000-2011 Brian Bruns and others" )
 set( PRODUCT_VER_MAJ ${PROJECT_VERSION_MAJOR} )
 set( PRODUCT_VER_MIN ${PROJECT_VERSION_MINOR} )
 set( PRODUCT_VER_PAT ${PROJECT_VERSION_PATCH} )
-set( PRODUCT_VER_REV ${REVISION_NUMBER} )
+set( PRODUCT_VER_REV ${MDBTOOLS_VER_REV} )
 message( "Version for product ${PRODUCT_NAME} was set to ${PRODUCT_VER_MAJ}.${PRODUCT_VER_MIN}.${PRODUCT_VER_PAT}.${PRODUCT_VER_REV}")
 set( TARGET_VER_MAJ ${PROJECT_VERSION_MAJOR} )
 set( TARGET_VER_MIN ${PROJECT_VERSION_MINOR} )
 set( TARGET_VER_PAT ${PROJECT_VERSION_PATCH} )
-set( TARGET_VER_REV ${REVISION_NUMBER} )
+set( TARGET_VER_REV ${MDBTOOLS_VER_REV} )
 set( TARGET_DESCRIPTION "LibMDB - MDB Tools" )
 message( "Version for target ${TARGET_NAME} was set to ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}.${TARGET_VER_REV}")
 
@@ -26,7 +26,24 @@ include(CheckIncludeFile)
 include(CheckTypeSize)
 include(CheckFunctionExists)
 
-# Set feature test macros for POSIX functions (needed for wcstombs_l, newlocale, etc.)
+# Check for required headers FIRST (without feature test macros that may interfere)
+if(APPLE)
+    # On macOS, use xlocale instead of iconv
+    set(HAVE_ICONV_H OFF)
+    set(HAVE_XLOCALE_H ON)
+    message("-- Forcing xlocale on macOS" )
+else()
+    if(MDB_USE_ICONV)
+        check_include_file("iconv.h" HAVE_ICONV_H)
+    else()
+        set(HAVE_ICONV_H OFF)
+    endif()
+    check_include_file("xlocale.h" HAVE_XLOCALE_H)
+endif()
+set(HAVE_GLIB_H OFF)
+check_include_file("glib.h" HAVE_GLIB_H)
+
+# Now set feature test macros for POSIX functions (needed for wcstombs_l, newlocale, etc.)
 if(APPLE)
     # macOS requires _DARWIN_C_SOURCE and _USE_EXTENDED_LOCALES_
     set(CMAKE_REQUIRED_DEFINITIONS "-D_DARWIN_C_SOURCE -D_USE_EXTENDED_LOCALES_")
@@ -34,16 +51,7 @@ elseif(NOT WIN32)
     set(CMAKE_REQUIRED_DEFINITIONS "-D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200809L")
 endif()
 
-# Check for required headers
-if(APPLE)
-    # On macOS, use xlocale instead of iconv
-    set(HAVE_ICONV_H OFF)
-    set(HAVE_XLOCALE_H ON)
-else()
-    check_include_file("iconv.h" HAVE_ICONV_H)
-    check_include_file("xlocale.h" HAVE_XLOCALE_H)
-endif()
-check_include_file("glib.h" HAVE_GLIB_H)
+# Check for functions (these may require the feature test macros above)
 check_function_exists("strptime" HAVE_STRPTIME)
 check_function_exists("fmemopen" HAVE_FMEMOPEN)
 check_function_exists("gmtime_r" HAVE_GMTIME_R)
@@ -52,6 +60,8 @@ check_function_exists("mbstowcs_l" HAVE_MBSTOWCS_L)
 check_function_exists("reallocf" HAVE_REALLOCF)
 check_function_exists("vasprintf" HAVE_VASPRINTF)
 check_function_exists("vasnprintf" HAVE_VASNPRINTF)
+
+unset(CMAKE_REQUIRED_DEFINITIONS)  # Clear feature test macros after checks
 
 # Set configuration variables for mdbtools.h
 if(HAVE_ICONV_H)
@@ -245,30 +255,18 @@ elseif(NOT WIN32)
     )
 endif()
 
-if (HAVE_STRPTIME)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_STRPTIME)
-endif()
-if(HAVE_FMEMOPEN)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_FMEMOPEN)
-endif()
-if (HAVE_GMTIME_R)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_GMTIME_R)
-endif()
-if (HAVE_WCSTOMBS_L)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_WCSTOMBS_L)
-endif()
-if (HAVE_MBSTOWCS_L)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_MBSTOWCS_L)
-endif()
-if (HAVE_REALLOCF)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_REALLOCF)
-endif()
-if (HAVE_VASPRINTF)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_VASPRINTF)
-endif()
-if (HAVE_VASNPRINTF)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HAVE_VASNPRINTF)
-endif()
+# Add conditional compile definitions for detected functions
+target_compile_definitions(${TARGET_NAME} PRIVATE
+    $<$<BOOL:${HAVE_STRPTIME}>:HAVE_STRPTIME>
+    $<$<BOOL:${HAVE_FMEMOPEN}>:HAVE_FMEMOPEN>
+    $<$<BOOL:${HAVE_GMTIME_R}>:HAVE_GMTIME_R>
+    $<$<BOOL:${HAVE_WCSTOMBS_L}>:HAVE_WCSTOMBS_L>
+    $<$<BOOL:${HAVE_MBSTOWCS_L}>:HAVE_MBSTOWCS_L>
+    $<$<BOOL:${HAVE_REALLOCF}>:HAVE_REALLOCF>
+    $<$<BOOL:${HAVE_VASPRINTF}>:HAVE_VASPRINTF>
+    $<$<BOOL:${HAVE_VASNPRINTF}>:HAVE_VASNPRINTF>
+    $<$<BOOL:${HAVE_ICONV_H}>:HAVE_ICONV>
+)
 
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     if(DEFINED OUTPUT_NAME_SUFFIX)

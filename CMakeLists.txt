@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 
-if(NOT DEFINED REVISION_NUMBER)
+if(NOT DEFINED MDBTOOLS_VER_REV)
     execute_process(
         COMMAND git rev-list --count HEAD
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -12,16 +12,17 @@ if(NOT DEFINED REVISION_NUMBER)
     if(NOT GIT_RESULT EQUAL 0)
         set(GIT_COMMIT_COUNT 0)
     endif()
-    set(REVISION_NUMBER ${GIT_COMMIT_COUNT})
+    set(MDBTOOLS_VER_REV ${GIT_COMMIT_COUNT})
 endif()
 
-message(STATUS "Revision: ${REVISION_NUMBER}")
+message(STATUS "Revision: ${MDBTOOLS_VER_REV}")
 
 project("MDB Tools" VERSION 1.0.1 LANGUAGES C)
 
 option(MDB_BUILD_LIBRARY "Build the MDB library" ON)
 option(MDB_INSTALL_PER_CONFIG "Install per configuration (e.g., Debug, Release)" ON)
 option(MDB_INSTALL_ONLY_LIBRARY "Install only the library without headers" OFF)
+option(MDB_USE_ICONV "Use iconv for character encoding conversion" OFF)
 
 if(NOT DEFINED MDBTOOLS_INSTALL_DIR AND MDB_INSTALL_PER_CONFIG)
     if (CMAKE_INSTALL_PREFIX)
