@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
 set ( TARGET libmdb )
-if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    set ( TARGET_NAME ${TARGET} )
-else ()
-    set ( TARGET_NAME mdb )
-endif ()
 set( PRODUCT_NAME "mdbtools" )
 set( PRODUCT_COMPANY_NAME "" )
 set( PRODUCT_COPYRIGHT "Copyright \\251 2000-2011 Brian Bruns and others" )
@@ -19,7 +14,7 @@ set( TARGET_VER_MIN ${PROJECT_VERSION_MINOR} )
 set( TARGET_VER_PAT ${PROJECT_VERSION_PATCH} )
 set( TARGET_VER_REV ${MDBTOOLS_VER_REV} )
 set( TARGET_DESCRIPTION "LibMDB - MDB Tools" )
-message( "Version for target ${TARGET_NAME} was set to ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}.${TARGET_VER_REV}")
+message( "Version for target ${TARGET} was set to ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}.${TARGET_VER_REV}")
 
 # Configure header files from .in templates
 include(CheckIncludeFile)
@@ -222,41 +217,42 @@ elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     )
 endif()
 
-add_library ( ${TARGET_NAME} SHARED ${SOURCES} )
+add_library ( ${TARGET} SHARED ${SOURCES} )
+add_library(MDBTools::libmdb ALIAS ${TARGET})
 
 # On Windows, automatically export all symbols (generates .lib)
 if(MSVC)
-    set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    set_target_properties(${TARGET} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
     # Disable module definition file generation to use WINDOWS_EXPORT_ALL_SYMBOLS instead
-    #set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS_REPLACES_EXPORTS ON)
+    #set_target_properties(${TARGET} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS_REPLACES_EXPORTS ON)
 endif()
 
 # Configure include directories
 target_include_directories(
-    ${TARGET_NAME}
+    ${TARGET}
     PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}/include"  # Generated headers first
     $<$<PLATFORM_ID:Windows>:${MESTRELAB_DIR}/ya_getopt>
 )
 
-target_include_directories(${TARGET_NAME} PUBLIC ${MDBTOOLS_INCLUDE_DIR})
+target_include_directories(${TARGET} PUBLIC ${MDBTOOLS_INCLUDE_DIR})
 
 # Add feature test macros for POSIX functions
 if(APPLE)
     # macOS requires _DARWIN_C_SOURCE and _USE_EXTENDED_LOCALES_ to expose locale functions
-    target_compile_definitions(${TARGET_NAME} PRIVATE
+    target_compile_definitions(${TARGET} PRIVATE
         _DARWIN_C_SOURCE
         _USE_EXTENDED_LOCALES_
     )
 elseif(NOT WIN32)
-    target_compile_definitions(${TARGET_NAME} PRIVATE
+    target_compile_definitions(${TARGET} PRIVATE
         _XOPEN_SOURCE=700
         _POSIX_C_SOURCE=200809L
     )
 endif()
 
 # Add conditional compile definitions for detected functions
-target_compile_definitions(${TARGET_NAME} PRIVATE
+target_compile_definitions(${TARGET} PRIVATE
     $<$<BOOL:${HAVE_STRPTIME}>:HAVE_STRPTIME>
     $<$<BOOL:${HAVE_FMEMOPEN}>:HAVE_FMEMOPEN>
     $<$<BOOL:${HAVE_GMTIME_R}>:HAVE_GMTIME_R>
@@ -269,34 +265,31 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
 )
 
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    if(DEFINED OUTPUT_NAME_SUFFIX)
-        set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${TARGET}${OUTPUT_NAME_SUFFIX}")
-    endif()
+    set(TARGET_NAME ${TARGET})
 else ()
-    if(DEFINED OUTPUT_NAME_SUFFIX)
-        set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "mdb${OUTPUT_NAME_SUFFIX}")
-    endif()
+    set(TARGET_NAME mdb)
 endif ()
+set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME "${TARGET_NAME}${OUTPUT_NAME_SUFFIX}")
 
-set_property(TARGET ${TARGET_NAME} PROPERTY C_STANDARD 11)
+set_property(TARGET ${TARGET} PROPERTY C_STANDARD 11)
 
 # Define TLS support based on compiler
 if(MSVC)
-    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=__declspec(thread)")
+    target_compile_definitions(${TARGET} PRIVATE "TLS=__declspec(thread)")
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=__thread")
+    target_compile_definitions(${TARGET} PRIVATE "TLS=__thread")
 else()
-    target_compile_definitions(${TARGET_NAME} PRIVATE "TLS=")
+    target_compile_definitions(${TARGET} PRIVATE "TLS=")
 endif()
 
 if ( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
-    set_target_properties( ${TARGET_NAME} PROPERTIES
+    set_target_properties( ${TARGET} PROPERTIES
         MACHO_COMPATIBILITY_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}
         MACHO_CURRENT_VERSION ${TARGET_VER_MAJ}.${TARGET_VER_MIN}.${TARGET_VER_PAT}
         SUFFIX ".so"
     )
 elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    target_link_libraries( ${TARGET_NAME}
+    target_link_libraries( ${TARGET}
         PRIVATE dl
     )
 endif()
@@ -312,7 +305,7 @@ else()
 endif()
 
 install (
-    TARGETS ${TARGET_NAME}
+    TARGETS ${TARGET}
     LIBRARY DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}
     ARCHIVE DESTINATION ${MDBTOOLS_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${MDBTOOLS_INSTALL_BIN_DIR}
@@ -321,7 +314,7 @@ install (
 # Install PDB files on Windows for debugging
 if(MSVC)
     install(
-        FILES $<TARGET_PDB_FILE:${TARGET_NAME}>
+        FILES $<TARGET_PDB_FILE:${TARGET}>
         DESTINATION ${MDBTOOLS_INSTALL_BIN_DIR}
         OPTIONAL
     )
